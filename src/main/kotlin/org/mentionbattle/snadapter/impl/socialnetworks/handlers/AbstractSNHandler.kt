@@ -11,7 +11,7 @@ internal abstract class AbstractSNHandler : SocialNetworkHandler {
 
     //TODO: it's possible to remove eventype, because we can use pattern matching. see when {} at "learn kotlin"
 
-    override fun notifyListeners(data: SocialNetworkData, eventType: SocialNetworkEventType) {
+    open protected fun notifyListeners(data: SocialNetworkData, eventType: SocialNetworkEventType) {
         for (l in listeners)
             l.HandleEvent(eventType, data)
     }
