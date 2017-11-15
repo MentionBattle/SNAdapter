@@ -1,10 +1,14 @@
 package org.mentionbattle.snadapter.impl.startup
 
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
-import org.mentionbattle.snadapter.api.core.Component
+import org.mentionbattle.snadapter.api.core.SocialNetwork
 import org.mentionbattle.snadapter.api.core.SocialNetworkInitializer
-import org.mentionbattle.snadapter.impl.SocialNetworkAdapter
+import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
+import org.mentionbattle.snadapter.impl.CoreListener
+import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
+import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
 import org.mentionbattle.snadapter.impl.startup.components.ComponentSystem
 import org.mentionbattle.snadapter.impl.startup.components.ReflectionComponent
 import org.mentionbattle.snadapter.impl.startup.configuration.Configuration
@@ -12,13 +16,22 @@ import org.mentionbattle.snadapter.impl.startup.configuration.ConfigurationParse
 
 class StartUpManager : AutoCloseable{
 
-    lateinit var configuration : Configuration
+    private lateinit var socialNetworks : Map<String, SocialNetworkHandler>
+
     fun initialize(packages : List<String>) {
-        configuration = ConfigurationParser().Parse("sna.config")
-        //first : start up
+        val configuration = ConfigurationParser().Parse("sna.config")
+        //setup components
+        setupComponents(configuration, packages)
+
+        //setup social networks
+        socialNetworks = setupSocialNetworks(configuration)
+    }
+
+    private fun setupComponents(configuration: Configuration, packages : List<String>) {
         val reflectionComponent = ReflectionComponent(packages)
         val initializers = reflectionComponent.getAnnotatedTypes(SocialNetworkInitializer::class.java)
         val defaultComponents = mutableListOf<Any>()
+
         for (i in initializers) {
             val annotation = i.getAnnotation(SocialNetworkInitializer::class.java)
             val r = i.constructors[0].newInstance(configuration.socialNetworkInitializers[annotation.name])
@@ -30,9 +43,57 @@ class StartUpManager : AutoCloseable{
         }
     }
 
-    fun run() {
-        val sna = ComponentSystem.getComponent(SocialNetworkAdapter::class.java) as SocialNetworkAdapter
-        sna.run()
+    private fun setupSocialNetworks(configuration: Configuration) : Map<String, SocialNetworkHandler> {
+        val result = mutableMapOf<String, SocialNetworkHandler>()
+        val reflection = ComponentSystem.getComponent(ReflectionComponent::class.java) as ReflectionComponent
+        val socialNetworks = reflection.getAnnotatedTypes(SocialNetwork::class.java)
+        for (s in socialNetworks) {
+            val socialNetworkAnnotation = s.getAnnotation(SocialNetwork::class.java)
+            if (socialNetworkAnnotation.name in configuration.socicalNetworks) {
+                result[socialNetworkAnnotation.name] = createSocialNetwork(s)
+            }
+        }
+        return result
+    }
+
+    private fun createSocialNetwork(handler : Class<*>) : SocialNetworkHandler {
+        val constructor = handler.constructors[0];
+
+        var arguments = arrayOfNulls<Any>(constructor.parameterTypes.size)
+        var curArgs = 0;
+        for (p in constructor.parameterTypes) {
+            arguments[curArgs++] = ComponentSystem.getComponent(p);
+        }
+        return constructor.newInstance(*arguments) as SocialNetworkHandler
+    }
+
+
+    suspend fun run() {
+        val jobs = mutableListOf<Job>()
+        val listener = ComponentSystem.getComponent(CoreListener::class.java) as CoreListener
+        launch {
+            listener.run(1020)
+        }
+        for (k in socialNetworks.keys) {
+            jobs.add(
+                    launch {
+                        socialNetworks[k]?.processData()
+                    }
+            )
+        }
+        while (true) {
+            val result = readLine()
+            if (result.equals("exit")) {
+                break
+            }
+        }
+
+        println("Shutdown starting...")
+        var eventQueue = ComponentSystem.getComponent(PrimitiveEventQueue::class.java) as PrimitiveEventQueue
+        eventQueue.addEvent(ExitEvent())
+        jobs.forEach({j ->
+            j.join()
+        })
     }
 
     override fun close() {

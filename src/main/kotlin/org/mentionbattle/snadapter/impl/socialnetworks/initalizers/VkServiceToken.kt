@@ -5,6 +5,6 @@ import org.mentionbattle.snadapter.api.core.SocialNetworkInitializer
 
 @Component
 @SocialNetworkInitializer("VkServiceToken")
-internal class VkServiceToken(val map: Map<String, Any?>) {
+internal class VkServiceToken(val map: Map<String, Any>) {
     val accessToken:String by map
 }

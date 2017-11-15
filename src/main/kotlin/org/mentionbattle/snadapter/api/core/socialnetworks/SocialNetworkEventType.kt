@@ -1,5 +1,5 @@
 package org.mentionbattle.snadapter.api.core.socialnetworks
 
-internal enum class SocialNetworkEventType {
+enum class SocialNetworkEventType {
     Post
 }
