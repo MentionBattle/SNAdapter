@@ -29,7 +29,7 @@ internal class TwitterHandler(eventQueue : PrimitiveEventQueue) : SocialNetworkH
         eventQueue.addHandler(this)
         while (isWorking) {
             eventQueue.addEvent(StringEvent("twitter adds event"))
-            Thread.sleep(1000)
+            Thread.sleep(3000)
         }
         println("Twitter job cancelled")
     }
