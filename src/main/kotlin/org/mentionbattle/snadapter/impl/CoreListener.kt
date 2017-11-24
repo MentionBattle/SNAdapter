@@ -22,6 +22,8 @@ class CoreListener(eventQueue: PrimitiveEventQueue) : EventHandler {
         when (event) {
             is ExitEvent -> {
                 println("server shutdown start...")
+                for (c in clients)
+                    c.close()
                 server.close()
             }
             is StringEvent -> {

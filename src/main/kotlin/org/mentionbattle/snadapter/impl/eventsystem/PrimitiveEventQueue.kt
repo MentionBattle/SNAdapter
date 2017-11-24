@@ -1,18 +1,16 @@
 package org.mentionbattle.snadapter.impl.eventsystem
 
-import com.sun.jmx.remote.internal.ArrayQueue
 import org.mentionbattle.snadapter.api.core.Component
 import org.mentionbattle.snadapter.api.core.eventsystem.Event
 import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
 import org.mentionbattle.snadapter.api.core.eventsystem.EventQueue
-import java.util.*
 
 @Component
 class PrimitiveEventQueue : EventQueue {
     val handlers: MutableList<EventHandler> = mutableListOf()
 
     private val toRemove : MutableList<EventHandler> = mutableListOf()
-    override fun addHandler(eh : EventHandler) {
+    override fun addHandler(eh: EventHandler) {
         synchronized(this) {
             handlers.add(eh)
         }

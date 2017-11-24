@@ -10,10 +10,9 @@ import org.reflections.util.FilterBuilder
 import java.util.*
 
 class ReflectionComponent(packages:List<String>) {
-    private val packages = packages
-    private val reflections : Reflections = createReflections()
+    private val reflections : Reflections = createReflections(packages)
 
-    private fun createReflections() : Reflections {
+    private fun createReflections(packages:List<String>) : Reflections {
         var filterBuilder = FilterBuilder();
         packages.forEach { p -> filterBuilder.includePackage(p) }
 

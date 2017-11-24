@@ -19,7 +19,7 @@ class StartUpManager : AutoCloseable{
     private lateinit var socialNetworks : Map<String, SocialNetworkHandler>
 
     fun initialize(packages : List<String>) {
-        val configuration = ConfigurationParser().Parse("sna.config")
+        val configuration = ConfigurationParser().parse("sna.config")
         //setup components
         setupComponents(configuration, packages)
 
