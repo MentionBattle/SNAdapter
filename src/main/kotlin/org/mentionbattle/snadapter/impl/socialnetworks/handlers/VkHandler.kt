@@ -16,8 +16,8 @@ internal class VkHandler(token: VkServiceToken, tags : Tags, eventQueue : Primit
     : SocialNetworkHandler, EventHandler {
 
     var isWorking = true
-    val token = token
     val eventQueue = eventQueue
+    val vk = VkStreamingServiceOfficial(token.accessToken)
 
     override fun handleEvent(event: Event) {
         when (event) {
@@ -30,10 +30,7 @@ internal class VkHandler(token: VkServiceToken, tags : Tags, eventQueue : Primit
 
     override fun processData() {
         eventQueue.addHandler(this)
-        while (isWorking) {
-            eventQueue.addEvent(StringEvent("vk adds event"))
-            Thread.sleep(2000)
-        }
-        println("Vk job cancelled")
+        vk.addHandler("logToConsole", vk.defaultHandler)
+        vk.startListenEvents()
     }
 }
