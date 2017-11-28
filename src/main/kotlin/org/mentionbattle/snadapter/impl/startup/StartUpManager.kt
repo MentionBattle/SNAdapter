@@ -50,7 +50,7 @@ class StartUpManager : AutoCloseable{
         val socialNetworks = reflection.getAnnotatedTypes(SocialNetwork::class.java)
         for (s in socialNetworks) {
             val socialNetworkAnnotation = s.getAnnotation(SocialNetwork::class.java)
-            if (socialNetworkAnnotation.name in configuration.socicalNetworks) {
+            if (socialNetworkAnnotation.name in configuration.socialNetworks) {
                 result[socialNetworkAnnotation.name] = createSocialNetwork(s)
             }
         }
