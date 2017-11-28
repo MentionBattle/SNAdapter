@@ -17,9 +17,10 @@ import org.mentionbattle.snadapter.impl.startup.configuration.ConfigurationParse
 class StartUpManager : AutoCloseable{
 
     private lateinit var socialNetworks : Map<String, SocialNetworkHandler>
+    private lateinit var configuration : Configuration
 
     fun initialize(packages : List<String>) {
-        val configuration = ConfigurationParser().parse("sna.config")
+        configuration = ConfigurationParser().parse("sna.config")
         //setup components
         setupComponents(configuration, packages)
 
@@ -72,7 +73,7 @@ class StartUpManager : AutoCloseable{
         val jobs = mutableListOf<Job>()
         val listener = ComponentSystem.getComponent(CoreListener::class.java) as CoreListener
         launch {
-            listener.run(1020)
+            listener.run(configuration.port)
         }
         for (k in socialNetworks.keys) {
             jobs.add(

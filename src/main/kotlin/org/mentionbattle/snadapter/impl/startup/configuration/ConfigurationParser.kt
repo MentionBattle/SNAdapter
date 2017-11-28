@@ -14,8 +14,8 @@ class ConfigurationParser {
         var text = Files.readAllLines(Paths.get(path)).joinToString(separator = "")
         val json = JSONObject(text)
 
-        val port = json["port"] as Integer
-        val config = Configuration(port as Int)
+        val port = json["port"] as Int
+        val config = Configuration(port)
         val socialNetworks = json["socialNetworks"] as JSONArray
         for (sn in socialNetworks) {
             config.socicalNetworks.add(sn as String)
@@ -34,12 +34,12 @@ class ConfigurationParser {
         return config
     }
 
-    fun parseInitializer(initializer : JSONObject): MutableMap<String, Any> {
+    private fun parseInitializer(initializer : JSONObject): MutableMap<String, Any> {
         val initializerFields = mutableMapOf<String, Any>()
         for (key in initializer.keys()) {
             val item = initializer[key]
             when (item) {
-                is Integer -> initializerFields[key] = item as Int
+                is Int -> initializerFields[key] = item
                 is String -> initializerFields[key] = item
                 is JSONArray -> {
                     val items = mutableListOf<String>()

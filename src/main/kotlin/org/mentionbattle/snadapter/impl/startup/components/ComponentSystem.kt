@@ -10,10 +10,6 @@ import org.reflections.scanners.TypeAnnotationsScanner
 import org.reflections.util.ConfigurationBuilder
 import java.util.LinkedList
 
-fun initReflectionComponent(packages : List<String>): ReflectionComponent {
-    return ReflectionComponent(packages)
-}
-
 object ComponentSystem {
 
     private lateinit var components:MutableMap<Class<out Any>, Any>
@@ -31,7 +27,6 @@ object ComponentSystem {
         components[ReflectionComponent::class.java] = reflectionComponent
 
         val componentsCollection = mutableSetOf<Class<out Any>>()
-        val reflectionComponent = components[ReflectionComponent::class.java] as ReflectionComponent
         componentsCollection.addAll(reflectionComponent.getAnnotatedTypes(Component::class.java));
 
         for (c in componentsCollection)
@@ -41,7 +36,7 @@ object ComponentSystem {
         isInitialized = true;
     }
 
-    fun injectComponent(c: Class<out Any>, componentCollection: Set<Class<out Any>>,
+    private fun injectComponent(c: Class<out Any>, componentCollection: Set<Class<out Any>>,
                         visitedComponents : MutableSet<Class<out Any>>) {
 
         if (visitedComponents.contains(c)) {

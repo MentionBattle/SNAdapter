@@ -15,7 +15,7 @@ internal class VkStreamingServiceOfficial(serviceToken: String,
     private val actor: StreamingActor
 
     private var tagSequence = generateSequence(1L) { it + 1 }.iterator()
-    // TODO use bimap
+    //  TODO use bimap
     private var tagToValue: MutableMap<Long, String>
     private var valueToTag: MutableMap<String, Long>
     // TODO unremovable "Котики".. WTF?!

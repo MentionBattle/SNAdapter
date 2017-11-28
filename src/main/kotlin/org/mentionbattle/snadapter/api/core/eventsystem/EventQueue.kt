@@ -2,9 +2,9 @@ package org.mentionbattle.snadapter.api.core.eventsystem
 
 
 interface EventQueue {
-    fun addHandler(h : EventHandler)
+    fun addHandler(eh : EventHandler)
 
-    fun removeHandler(h : EventHandler)
+    fun removeHandler(eh : EventHandler)
 
     fun addEvent(event : Event)
 }
