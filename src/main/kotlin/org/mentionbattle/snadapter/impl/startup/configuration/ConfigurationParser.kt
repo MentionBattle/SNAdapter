@@ -3,7 +3,6 @@ package org.mentionbattle.snadapter.impl.startup.configuration
 import org.json.JSONArray
 import org.json.JSONObject
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
 
 class ConfigurationParser {
@@ -11,14 +10,14 @@ class ConfigurationParser {
         if (!Files.exists(Paths.get(path)))  {
             throw ConfigurationParserException("The file does not exist")
         }
-        var text = Files.readAllLines(Paths.get(path)).joinToString(separator = "")
+        val text = Files.readAllLines(Paths.get(path)).joinToString(separator = "")
         val json = JSONObject(text)
 
         val port = json["port"] as Int
         val config = Configuration(port)
         val socialNetworks = json["socialNetworks"] as JSONArray
         for (sn in socialNetworks) {
-            config.socicalNetworks.add(sn as String)
+            config.socialNetworks.add(sn as String)
         }
 
         val initializers = json["socialNetworkInitializers"] as JSONArray
