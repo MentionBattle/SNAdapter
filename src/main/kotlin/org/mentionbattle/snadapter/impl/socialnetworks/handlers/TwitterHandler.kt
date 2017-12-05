@@ -3,11 +3,10 @@ package org.mentionbattle.snadapter.impl.socialnetworks.handlers
 import org.mentionbattle.snadapter.api.core.SocialNetwork
 import org.mentionbattle.snadapter.api.core.eventsystem.Event
 import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
-import org.mentionbattle.snadapter.api.core.eventsystem.EventQueue
 import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
 import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
-import org.mentionbattle.snadapter.impl.eventsystem.StringEvent
+import org.mentionbattle.snadapter.impl.eventsystem.LogEvent
 
 
 @SocialNetwork("Twitter")
@@ -28,7 +27,7 @@ internal class TwitterHandler(eventQueue : PrimitiveEventQueue) : SocialNetworkH
     override fun processData() {
         eventQueue.addHandler(this)
         while (isWorking) {
-            eventQueue.addEvent(StringEvent("twitter adds event"))
+            eventQueue.addEvent(LogEvent("twitter adds event"))
             Thread.sleep(3000)
         }
         println("Twitter job cancelled")

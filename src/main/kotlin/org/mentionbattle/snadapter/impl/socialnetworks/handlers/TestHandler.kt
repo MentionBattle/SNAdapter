@@ -7,7 +7,6 @@ import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
 import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
 import org.mentionbattle.snadapter.impl.eventsystem.MentionEvent
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
-import org.mentionbattle.snadapter.impl.eventsystem.StringEvent
 import java.util.*
 
 @SocialNetwork("Test")

@@ -3,11 +3,9 @@ package org.mentionbattle.snadapter.impl.socialnetworks.handlers
 import org.mentionbattle.snadapter.api.core.SocialNetwork
 import org.mentionbattle.snadapter.api.core.eventsystem.Event
 import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
-import org.mentionbattle.snadapter.api.core.eventsystem.EventQueue
 import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
 import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
-import org.mentionbattle.snadapter.impl.eventsystem.StringEvent
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.Tags
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.VkServiceToken
 
