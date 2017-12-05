@@ -51,7 +51,13 @@ class StartUpManager : AutoCloseable{
         for (s in socialNetworks) {
             val socialNetworkAnnotation = s.getAnnotation(SocialNetwork::class.java)
             if (socialNetworkAnnotation.name in configuration.socialNetworks) {
-                result[socialNetworkAnnotation.name] = createSocialNetwork(s)
+                val name = socialNetworkAnnotation.name
+                try {
+                    result[name] = createSocialNetwork(s)
+                } catch (e : Exception) {
+                    System.err.println("ERROR : social network with name $name has been crashed in constructor with:")
+                    System.err.println(e.cause)
+                }
             }
         }
         return result
