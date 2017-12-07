@@ -23,6 +23,6 @@ class Contender (name : String, path : String) {
                 result.addAll(t.toList())
             }
         }
-        return "data:image/${getImageFormat()};" + Base64.getEncoder().encodeToString(result.toByteArray());
+        return "data:image/${getImageFormat()};base64," + Base64.getEncoder().encodeToString(result.toByteArray());
     }
 }
