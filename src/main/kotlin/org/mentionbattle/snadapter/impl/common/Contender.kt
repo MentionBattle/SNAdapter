@@ -7,6 +7,10 @@ class Contender (name : String, path : String) {
     val name = name;
     val path = path;
 
+    private fun getImageFormat() : String {
+        return path.split(".").last()
+    }
+
     fun packImageToBase64() : String {
         val result = mutableListOf<Byte>()
         FileInputStream(path).use {
@@ -19,6 +23,6 @@ class Contender (name : String, path : String) {
                 result.addAll(t.toList())
             }
         }
-        return Base64.getEncoder().encodeToString(result.toByteArray());
+        return "data:image/${getImageFormat()};" + Base64.getEncoder().encodeToString(result.toByteArray());
     }
 }

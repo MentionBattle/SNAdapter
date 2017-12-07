@@ -27,7 +27,7 @@ class MentionEvent(contender : Int, from : String, url: String, userName : Strin
         df.timeZone = tz
         val sb = StringBuilder()
         sb.append("{")
-                .append("\"contender\" : ").append(1).append(",")
+                .append("\"contender\" : ").append(contender).append(",")
                 .append("\"msg\" : {")
 
                     .append("\"url\" : ").append("\"").append(url).append("\"").append(",")
