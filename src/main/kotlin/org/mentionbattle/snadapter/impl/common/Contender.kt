@@ -1,11 +1,17 @@
 package org.mentionbattle.snadapter.impl.common
 
 import java.io.FileInputStream
+import java.nio.file.FileSystem
+import java.nio.file.FileSystems
 import java.util.*
 
 class Contender (name : String, path : String) {
     val name = name;
-    val path = path;
+    val path : String
+
+    init {
+        this.path = path.replace('\\', FileSystems.getDefault().separator[0])
+    }
 
     private fun getImageFormat() : String {
         return path.split(".").last()
