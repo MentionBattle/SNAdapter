@@ -61,6 +61,8 @@ class Core(eventQueue: PrimitiveEventQueue) : EventHandler {
             if (answer.equals("%server%")) {
                 client.sendString(firstAnswer)
                 clients.add(client)
+            } else {
+                client.close()
             }
         } catch (e : SocketException) {
         }
