@@ -5,9 +5,6 @@ import org.mentionbattle.snadapter.api.core.SocialNetwork
 import org.mentionbattle.snadapter.api.core.eventsystem.Event
 import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
 import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
-import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
-import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
-import org.mentionbattle.snadapter.impl.eventsystem.StringEvent
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.Tags
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.TwitterTokens
 
@@ -15,10 +12,21 @@ import jp.nephy.penicillin.Client
 import jp.nephy.penicillin.credential.*
 import jp.nephy.penicillin.model.Delete
 import jp.nephy.penicillin.model.Status
+import jp.nephy.penicillin.streaming.AbsStreamingParser
 import jp.nephy.penicillin.streaming.IFilterStreamListener
+import org.mentionbattle.snadapter.impl.eventsystem.*
+import java.util.*
 
 @SocialNetwork("Twitter")
 internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: PrimitiveEventQueue) : SocialNetworkHandler, EventHandler, IFilterStreamListener {
+
+    val eventQueue = eventQueue
+    var isWorking = true
+    val consumerKey = token.consumerKey as String
+    val consumerSecret = token.consumerSecret as String
+    val accessToken = token.accessToken as String
+    val accessTokenSecret = token.accessTokenSecret as String
+    lateinit var listener : AbsStreamingParser<IFilterStreamListener>
 
 
     override fun onStatus(status: Status) {
@@ -28,7 +36,10 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
                 url,
                 status.user.profileImageUrlHttps.toString()
         )
-        eventQueue.addEvent(StringEvent(info.toString()))
+        val rnd = Random()
+        eventQueue.addEvent(MentionEvent(rnd.nextInt(2) + 1, "twitter",
+                url, status.user.name, status.text,
+                status.user.profileImageUrlHttps.toString(), Date()))
         println(info)
     }
 
@@ -40,19 +51,14 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
         print("onDelete " + delete.toString())
     }
 
-
-    val eventQueue = eventQueue
-    var isWorking = true
-    val consumerKey = token.consumerKey as String
-    val consumerSecret = token.consumerSecret as String
-    val accessToken = token.accessToken as String
-    val accessTokenSecret = token.accessTokenSecret as String
-
     override fun handleEvent(event: Event) {
         when (event) {
             is ExitEvent -> {
-                isWorking = false
+                // stop streaming
+                listener.terminate() // Stdout: Closed.
                 eventQueue.removeHandler(this)
+                isWorking = false
+                println("Twitter job cancelled")
             }
         }
     }
@@ -68,21 +74,14 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
                 .writeTimeout(20)
                 .build()  // return Client instance
 
-        val trackList = arrayOf("putin")
+        val trackList = arrayOf("spaceX")
         val responseStream = client.stream.getFilterStream(track = trackList)
-        val listener = responseStream.listen(this)
+        listener = responseStream.listen(this)
                 .onClose { println("Twitter listener stopped") }
                 .start()
         // process stream asynchronously (non-blocking)
 
-
         eventQueue.addHandler(this)
-
-        // stop streaming after 30 seconds
-        Thread.sleep(30000)
-        listener.terminate() // Stdout: Closed.
-        isWorking = false
-        println("Twitter job cancelled")
     }
 
 }

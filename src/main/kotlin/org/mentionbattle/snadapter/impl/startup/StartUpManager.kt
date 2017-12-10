@@ -6,7 +6,7 @@ import kotlinx.coroutines.experimental.runBlocking
 import org.mentionbattle.snadapter.api.core.SocialNetwork
 import org.mentionbattle.snadapter.api.core.SocialNetworkInitializer
 import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
-import org.mentionbattle.snadapter.impl.CoreListener
+import org.mentionbattle.snadapter.impl.common.Core
 import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
 import org.mentionbattle.snadapter.impl.startup.components.ComponentSystem
@@ -14,12 +14,12 @@ import org.mentionbattle.snadapter.impl.startup.components.ReflectionComponent
 import org.mentionbattle.snadapter.impl.startup.configuration.Configuration
 import org.mentionbattle.snadapter.impl.startup.configuration.ConfigurationParser
 
-class StartUpManager : AutoCloseable{
+class StartUpManager : AutoCloseable {
 
-    private lateinit var socialNetworks : Map<String, SocialNetworkHandler>
-    private lateinit var configuration : Configuration
+    private lateinit var socialNetworks: Map<String, SocialNetworkHandler>
+    private lateinit var configuration: Configuration
 
-    fun initialize(packages : List<String>) {
+    fun initialize(packages: List<String>) {
         configuration = ConfigurationParser().parse("sna.config")
         //setup components
         setupComponents(configuration, packages)
@@ -28,7 +28,7 @@ class StartUpManager : AutoCloseable{
         socialNetworks = setupSocialNetworks(configuration)
     }
 
-    private fun setupComponents(configuration: Configuration, packages : List<String>) {
+    private fun setupComponents(configuration: Configuration, packages: List<String>) {
         val reflectionComponent = ReflectionComponent(packages)
         val initializers = reflectionComponent.getAnnotatedTypes(SocialNetworkInitializer::class.java)
         val defaultComponents = mutableListOf<Any>()
@@ -44,20 +44,26 @@ class StartUpManager : AutoCloseable{
         }
     }
 
-    private fun setupSocialNetworks(configuration: Configuration) : Map<String, SocialNetworkHandler> {
+    private fun setupSocialNetworks(configuration: Configuration): Map<String, SocialNetworkHandler> {
         val result = mutableMapOf<String, SocialNetworkHandler>()
         val reflection = ComponentSystem.getComponent(ReflectionComponent::class.java) as ReflectionComponent
         val socialNetworks = reflection.getAnnotatedTypes(SocialNetwork::class.java)
         for (s in socialNetworks) {
             val socialNetworkAnnotation = s.getAnnotation(SocialNetwork::class.java)
             if (socialNetworkAnnotation.name in configuration.socialNetworks) {
-                result[socialNetworkAnnotation.name] = createSocialNetwork(s)
+                val name = socialNetworkAnnotation.name
+                try {
+                    result[name] = createSocialNetwork(s)
+                } catch (e: Exception) {
+                    System.err.println("ERROR : social network with name $name has been crashed in constructor with:")
+                    System.err.println(e.cause)
+                }
             }
         }
         return result
     }
 
-    private fun createSocialNetwork(handler : Class<*>) : SocialNetworkHandler {
+    private fun createSocialNetwork(handler: Class<*>): SocialNetworkHandler {
         val constructor = handler.constructors[0];
 
         var arguments = arrayOfNulls<Any>(constructor.parameterTypes.size)
@@ -71,14 +77,19 @@ class StartUpManager : AutoCloseable{
 
     suspend fun run() {
         val jobs = mutableListOf<Job>()
-        val listener = ComponentSystem.getComponent(CoreListener::class.java) as CoreListener
+        val core = ComponentSystem.getComponent(Core::class.java) as Core
         launch {
-            listener.run(configuration.port)
+            core.run(configuration)
         }
         for (k in socialNetworks.keys) {
             jobs.add(
                     launch {
-                        socialNetworks[k]?.processData()
+                        try {
+                            socialNetworks[k]?.processData()
+                        } catch (e: Exception) {
+                            System.err.println("ERROR :: Social network with name $k has been crashed in process data with:")
+                            System.err.println(e)
+                        }
                     }
             )
         }
@@ -89,10 +100,10 @@ class StartUpManager : AutoCloseable{
             }
         }
 
-        println("Shutdown starting...")
+        System.err.println("Log :: Shutdown started...")
         var eventQueue = ComponentSystem.getComponent(PrimitiveEventQueue::class.java) as PrimitiveEventQueue
         eventQueue.addEvent(ExitEvent())
-        jobs.forEach({j ->
+        jobs.forEach({ j ->
             j.join()
         })
     }

@@ -2,6 +2,7 @@ package org.mentionbattle.snadapter.impl.startup.configuration
 
 import org.json.JSONArray
 import org.json.JSONObject
+import org.mentionbattle.snadapter.impl.common.Contender
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -30,6 +31,8 @@ class ConfigurationParser {
                 throw ConfigurationParserException("Json object expected")
             }
         }
+        config.contenders.add(parseContender(json["contenderA"] as JSONObject))
+        config.contenders.add(parseContender(json["contenderB"] as JSONObject))
         return config
     }
 
@@ -54,5 +57,11 @@ class ConfigurationParser {
             }
         }
         return initializerFields
+    }
+
+    private fun parseContender(contenderJson : JSONObject) : Contender {
+        val name =  contenderJson["name"] as String
+        val imagePath = contenderJson["image"] as String
+        return Contender(name, imagePath)
     }
 }
