@@ -1,6 +1,6 @@
 package org.mentionbattle.snadapter.impl.socialnetworks.handlers
 
-import com.twitter.hbc.httpclient.auth.OAuth1
+import com.google.common.collect.Lists
 import org.mentionbattle.snadapter.api.core.SocialNetwork
 import org.mentionbattle.snadapter.api.core.eventsystem.Event
 import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
@@ -8,23 +8,45 @@ import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
 import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
 import org.mentionbattle.snadapter.impl.eventsystem.StringEvent
-import com.google.common.collect.Lists
-import com.twitter.hbc.core.endpoint.StatusesFilterEndpoint
-import java.util.concurrent.LinkedBlockingQueue
-import com.twitter.hbc.core.processor.StringDelimitedProcessor
-import com.twitter.hbc.ClientBuilder
-import java.util.concurrent.TimeUnit
-import com.twitter.hbc.core.Constants
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.Tags
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.TwitterTokens
-import org.json.JSONObject
+
+import jp.nephy.penicillin.Client
+import jp.nephy.penicillin.credential.*
+import jp.nephy.penicillin.model.Delete
+import jp.nephy.penicillin.model.Status
+import jp.nephy.penicillin.streaming.IFilterStreamListener
 
 @SocialNetwork("Twitter")
-internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: PrimitiveEventQueue) : SocialNetworkHandler, EventHandler {
+internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: PrimitiveEventQueue) : SocialNetworkHandler, EventHandler, IFilterStreamListener {
+
+
+    override fun onStatus(status: Status) {
+        val url = "https://twitter.com/" + status.user.screenName + "/status/" + status.idStr
+        val info = Lists.newArrayList<String>(
+                status.text,
+                url,
+                status.user.profileImageUrlHttps.toString()
+        )
+        eventQueue.addEvent(StringEvent(info.toString()))
+        println(info)
+    }
+
+    override fun onUnknownData(data: String) {
+        println("onUnknownData " + data)
+    }
+
+    override fun onDelete(delete: Delete) {
+        print("onDelete " + delete.toString())
+    }
+
 
     val eventQueue = eventQueue
     var isWorking = true
-    val auth = OAuth1(token.consumerKey, token.consumerSecret, token.accessToken, token.accessTokenSecret)
+    val consumerKey = token.consumerKey as String
+    val consumerSecret = token.consumerSecret as String
+    val accessToken = token.accessToken as String
+    val accessTokenSecret = token.accessTokenSecret as String
 
     override fun handleEvent(event: Event) {
         when (event) {
@@ -36,58 +58,30 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
     }
 
     override fun processData() {
-        val queue = LinkedBlockingQueue<String>(10000)
-        val endpoint = StatusesFilterEndpoint()
-        // add some track terms
-        endpoint.trackTerms(Lists.newArrayList("cats"))
+        val client = Client.builder()
+                .authenticate(
+                        ConsumerKey(consumerKey), ConsumerSecret(consumerSecret),
+                        AccessToken(accessToken), AccessTokenSecret(accessTokenSecret)
+                )
+                .connectTimeout(20)  // optional: timeouts in sec
+                .readTimeout(40)
+                .writeTimeout(20)
+                .build()  // return Client instance
 
-        // Create a new BasicClient. By default gzip is enabled.
-        val client = ClientBuilder()
-                .hosts(Constants.STREAM_HOST)
-                .endpoint(endpoint)
-                .authentication(auth)
-                .processor(StringDelimitedProcessor(queue))
-                .build()
+        val trackList = arrayOf("putin")
+        val responseStream = client.stream.getFilterStream(track = trackList)
+        val listener = responseStream.listen(this)
+                .onClose { println("Twitter listener stopped") }
+                .start()
+        // process stream asynchronously (non-blocking)
 
-        // Establish a connection
-        client.connect()
-
-        // Do whatever needs to be done with messages
-        for (msgRead in 0..999) {
-            val msg = queue.take()
-            val json = JSONObject(msg)
-            val user = json["user"] as JSONObject
-            val name = user["name"] as String
-            println(name)
-        }
-
-        client.stop()
-
-        // Do whatever needs to be done with messages
-        for (msgRead in 0..999) {
-            if (client.isDone()) {
-                println("Client connection closed unexpectedly: " + client.getExitEvent().getMessage())
-                break
-            }
-
-            val msg = queue.poll(5, TimeUnit.SECONDS)
-            if (msg == null) {
-                println("Did not receive a message in 5 seconds")
-            } else {
-                println(msg)
-            }
-        }
-
-        client.stop()
-
-        // Print some stats
-        System.out.printf("The client read %d messages!\n", client.getStatsTracker().getNumMessages())
 
         eventQueue.addHandler(this)
-        while (isWorking) {
-            eventQueue.addEvent(StringEvent("twitter adds event"))
-            Thread.sleep(3000)
-        }
+
+        // stop streaming after 30 seconds
+        Thread.sleep(30000)
+        listener.terminate() // Stdout: Closed.
+        isWorking = false
         println("Twitter job cancelled")
     }
 
