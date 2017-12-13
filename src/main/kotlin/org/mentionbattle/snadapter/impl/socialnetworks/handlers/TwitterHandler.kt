@@ -47,7 +47,7 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
             for (id in contenderIds) {
                 eventQueue.addEvent(MentionEvent(id, "twitter",
                         url, status.user.name, status.text,
-                        status.user.profileImageURLHttps.toString(), Date()))
+                        status.user.profileImageURLHttps.toString(), status.createdAt))
             }
             println("${status.text} $url")
         }
