@@ -23,7 +23,7 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
     private val tags = tags
     private val tokens = token
     private lateinit var twitterStream: TwitterStream
-    private val tweetURLScheme = "https://twitter.com/${0}/status/{1}"
+    private val tweetURLScheme = "https://twitter.com/%s/status/%s"
 
     private val listener = object : StatusListener {
         override fun onStatus(status: Status) {
