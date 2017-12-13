@@ -23,10 +23,10 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
     private val tags = tags
     private val tokens = token
     private lateinit var twitterStream: TwitterStream
+    private val tweetURLScheme = "https://twitter.com/${0}/status/{1}"
 
     private val listener = object : StatusListener {
         override fun onStatus(status: Status) {
-            val url = "https://twitter.com/" + status.user.screenName + "/status/" + status.id.toString()
             var contenderIds = intArrayOf()
             for (key in tags.contenderA) {
                 if (status.text.contains(key, true)) {
@@ -42,26 +42,22 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
             }
             for (id in contenderIds) {
                 eventQueue.addEvent(MentionEvent(id, "twitter",
-                        url, status.user.name, status.text,
-                        status.user.profileImageURLHttps.toString(), status.createdAt))
+                        tweetURLScheme.format(status.user.screenName, status.id.toString()),
+                        status.user.name, status.text, status.user.profileImageURLHttps.toString(),
+                        status.createdAt))
             }
-            println("${status.text} $url")
         }
 
         override fun onDeletionNotice(statusDeletionNotice: StatusDeletionNotice) {}
 
-        override fun onTrackLimitationNotice(numberOfLimitedStatuses: Int) {
-            println("Got track limitation notice:" + numberOfLimitedStatuses)
-        }
+        override fun onTrackLimitationNotice(numberOfLimitedStatuses: Int) {}
 
         override fun onScrubGeo(userId: Long, upToStatusId: Long) {}
 
-        override fun onStallWarning(warning: StallWarning) {
-            println("Got stall warning:" + warning)
-        }
+        override fun onStallWarning(warning: StallWarning) {}
 
         override fun onException(ex: Exception) {
-            ex.printStackTrace()
+            eventQueue.addEvent(LogEvent(ex.localizedMessage))
         }
     }
 
