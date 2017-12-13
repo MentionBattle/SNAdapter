@@ -31,22 +31,24 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
     private val listener = object : StatusListener {
         override fun onStatus(status: Status) {
             val url = "https://twitter.com/" + status.user.screenName + "/status/" + status.id.toString()
-            var contenderId = 0
+            var contenderIds = intArrayOf()
             for (key in tags.contenderA) {
-                if (status.text.contains(key)) {
-                    contenderId += 1
+                if (status.text.contains(key, true)) {
+                    contenderIds = contenderIds.plus(1)
                     break
                 }
             }
             for (key in tags.contenderB) {
-                if (status.text.contains(key)) {
-                    contenderId += 2
+                if (status.text.contains(key, true)) {
+                    contenderIds = contenderIds.plus(2)
                     break
                 }
             }
-            eventQueue.addEvent(MentionEvent(contenderId, "twitter",
-                    url, status.user.name, status.text,
-                    status.user.profileImageURLHttps.toString(), Date()))
+            for (id in contenderIds) {
+                eventQueue.addEvent(MentionEvent(id, "twitter",
+                        url, status.user.name, status.text,
+                        status.user.profileImageURLHttps.toString(), Date()))
+            }
             println("${status.text} $url")
         }
 
