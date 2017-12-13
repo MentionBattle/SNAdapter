@@ -1,6 +1,5 @@
 package org.mentionbattle.snadapter.impl.socialnetworks.handlers
 
-import com.google.common.collect.Lists
 import org.mentionbattle.snadapter.api.core.SocialNetwork
 import org.mentionbattle.snadapter.api.core.eventsystem.Event
 import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
@@ -9,7 +8,6 @@ import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.Tags
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.TwitterTokens
 
 import org.mentionbattle.snadapter.impl.eventsystem.*
-import java.util.*
 import twitter4j.Status;
 import twitter4j.conf.ConfigurationBuilder;
 import twitter4j.StallWarning
@@ -21,12 +19,10 @@ import twitter4j.TwitterStream
 
 @SocialNetwork("Twitter")
 internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: PrimitiveEventQueue) : SocialNetworkHandler, EventHandler {
-
-    val eventQueue = eventQueue
-    var isWorking = true
-    val tokens = token
-    val tags = tags
-    lateinit var twitterStream: TwitterStream
+    private val eventQueue = eventQueue
+    private val tags = tags
+    private val tokens = token
+    private lateinit var twitterStream: TwitterStream
 
     private val listener = object : StatusListener {
         override fun onStatus(status: Status) {
@@ -76,7 +72,6 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
                 twitterStream.cleanUp(); // shutdown internal stream consuming thread
                 twitterStream.shutdown(); // Shuts down internal dispatcher thread shared by all TwitterStream instan
                 eventQueue.removeHandler(this)
-                isWorking = false
                 println("Twitter job cancelled")
             }
         }
