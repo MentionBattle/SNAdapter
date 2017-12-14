@@ -14,8 +14,9 @@ import org.apache.logging.log4j.LogManager
 import org.asynchttpclient.ws.WebSocket
 import org.asynchttpclient.ws.WebSocketListener
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
-import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.eventhandlers.HashedTagToContentendIdWithTag
-import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.eventhandlers.VkMsgHandler
+import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.beautifiers.MsgBeautifier
+import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.handlers.HashedTagToContentendIdWithTag
+import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.handlers.VkMsgHandler
 import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.objects.RuleInfo
 
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.Tags
@@ -130,7 +131,7 @@ internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: P
     private fun initWebSocket(): WebSocket {
         return streamingClient.stream().get(streamingActor, object : StreamingEventHandler() {
             override fun handle(message: StreamingCallbackMessage) {
-                msgHandlers.forEach { it.handle(message, hashedTags) }
+                msgHandlers.forEach { it.handle(message, hashedTags, MsgBeautifier(apiClient, serviceActor)) }
             }
         }).execute()
     }

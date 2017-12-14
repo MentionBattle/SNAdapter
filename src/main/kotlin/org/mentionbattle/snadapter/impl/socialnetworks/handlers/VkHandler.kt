@@ -7,8 +7,8 @@ import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
 import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
 import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.VkStreamingService
-import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.eventhandlers.EventQueueHandler
-import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.eventhandlers.LogHandler
+import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.handlers.EventQueueHandler
+import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.handlers.LogHandler
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.Tags
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.VkServiceAuth
 
