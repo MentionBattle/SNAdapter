@@ -13,11 +13,11 @@ class EventQueueHandler(val eventQueue: PrimitiveEventQueue) : VkMsgHandler {
         val contanders = MutableList(2, { false })
         val msgTags = message.event.tags.filter { hashedTags.containsKey(it) }
         msgTags.forEach { tagHash ->
-            run { contanders[hashedTags.get(tagHash)!!.first - 1] = true }
+            contanders[hashedTags.get(tagHash)!!.first - 1] = true
         }
 
         for ((id, shouldSend) in contanders.withIndex()) {
-            if (shouldSend) eventQueue.addEvent(buildMentionEvent(id - 1, message))
+            if (shouldSend) eventQueue.addEvent(buildMentionEvent(id + 1, message))
         }
     }
 

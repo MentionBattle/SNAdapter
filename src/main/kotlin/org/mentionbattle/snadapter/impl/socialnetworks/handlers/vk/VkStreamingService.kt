@@ -10,6 +10,7 @@ import com.vk.api.sdk.streaming.objects.StreamingCallbackMessage
 import com.vk.api.sdk.streaming.objects.StreamingRule
 import com.vk.api.sdk.streaming.objects.responses.StreamingGetRulesResponse
 import com.vk.api.sdk.streaming.objects.responses.StreamingResponse
+import org.apache.logging.log4j.LogManager
 import org.asynchttpclient.ws.WebSocket
 import org.asynchttpclient.ws.WebSocketListener
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
@@ -25,6 +26,7 @@ import kotlin.collections.ArrayList
 
 internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: PrimitiveEventQueue)
     : Closeable {
+    private val logger = LogManager.getLogger()
     private val auth = auth
     private val hashedTags: HashedTagToContentendIdWithTag = HashMap()
 
@@ -40,6 +42,7 @@ internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: P
     private var msgHandlers: MutableList<VkMsgHandler> = ArrayList()
 
     init {
+        logger.info("init stream service")
         initConteder(tags.contenderA, 1)
         initConteder(tags.contenderB, 2)
     }
@@ -66,6 +69,7 @@ internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: P
     }
 
     private fun initApiConnection() {
+        logger.info("connect to vk server")
         val transportClient = HttpTransportClient()
         streamingClient = ClosableVkStreamingApiClient(transportClient)
         apiClient = VkApiClient(transportClient)
@@ -86,7 +90,7 @@ internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: P
     private fun addRule(ruleInfo: RuleInfo) {
         if (!hashedTags.containsKey(ruleInfo.tag)) return
 
-        println("add new rule: tag=${ruleInfo.tag} value=${ruleInfo.value}")
+        logger.info("add rule: tag=${ruleInfo.tag} value=${ruleInfo.value}")
         val response: StreamingResponse = streamingClient.rules()
                 .add(streamingActor, ruleInfo.tag, ruleInfo.value).execute()
     }
@@ -94,19 +98,18 @@ internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: P
     private fun deleteRule(tag: String) {
         if (!hashedTags.containsKey(tag)) return
 
-        println("delete rule: tag=$tag value=${hashedTags[tag]?.second ?: ""}\"")
+        logger.info("delete rule: tag=$tag value=${hashedTags[tag]?.second ?: ""}\"")
         val response: StreamingResponse = streamingClient.rules().delete(streamingActor, tag).execute()
     }
 
     fun addMsgHandler(handler: VkMsgHandler) {
-        println("add handler: ${handler.javaClass.canonicalName}")
+        logger.info("add msg handler: ${handler.javaClass.canonicalName}")
         msgHandlers.add(handler)
     }
 
     fun startListenMsgStream() {
-        println("start listen VK events")
-
-        getAllRules().forEach { println(it) }
+        logger.info("start to listen msg from stream for:")
+        getAllRules().forEach { logger.info(it) }
 
         val listener = object : WebSocketListener {
             override fun onOpen(w: WebSocket?) {}
@@ -114,6 +117,7 @@ internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: P
             override fun onClose(w: WebSocket?) {}
 
             override fun onError(t: Throwable?) {
+                logger.warn("error on stream socket: restarting")
                 websocket = initWebSocket()
                 websocket.addWebSocketListener(this)
             }
@@ -126,17 +130,18 @@ internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: P
     private fun initWebSocket(): WebSocket {
         return streamingClient.stream().get(streamingActor, object : StreamingEventHandler() {
             override fun handle(message: StreamingCallbackMessage) {
-                println("listen vk event")
                 msgHandlers.forEach { it.handle(message, hashedTags) }
             }
         }).execute()
     }
 
     override fun close() {
+        logger.info("vk stream service is shutdowning...")
         if (isConnected) {
             websocket.close()
             streamingClient.close()
         }
+        logger.info("vk stream service is closed")
     }
 }
 

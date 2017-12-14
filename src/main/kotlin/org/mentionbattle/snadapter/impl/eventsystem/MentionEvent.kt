@@ -40,4 +40,9 @@ class MentionEvent(contender : Int, from : String, url: String, userName : Strin
           .append("}")
         return sb.toString()
     }
+
+    override fun toString(): String {
+        return "MentionEvent(contender=$contender, url='$url', userName='$userName', from='$from', avatarUrl='$avatarUrl', text='$text', timeStamp=$timeStamp)"
+    }
+
 }
