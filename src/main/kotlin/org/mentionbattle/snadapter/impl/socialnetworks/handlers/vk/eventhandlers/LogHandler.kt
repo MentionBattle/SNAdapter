@@ -2,7 +2,7 @@ package org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.eventhandler
 
 import com.vk.api.sdk.streaming.objects.StreamingCallbackMessage
 
-class LogHandler : VkEventHandler {
+class LogHandler : VkMsgHandler {
     override fun handle(message: StreamingCallbackMessage,
                         hashedTags: HashedTagToContentendIdWithTag) {
         println("vk event")

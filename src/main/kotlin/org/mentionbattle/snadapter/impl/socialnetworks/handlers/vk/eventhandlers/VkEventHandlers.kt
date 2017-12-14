@@ -4,7 +4,7 @@ import com.vk.api.sdk.streaming.objects.StreamingCallbackMessage
 
 typealias HashedTagToContentendIdWithTag = MutableMap<String, Pair<Int, String>>
 
-interface VkEventHandler {
+interface VkMsgHandler {
     fun handle(message: StreamingCallbackMessage,
                hashedTags: HashedTagToContentendIdWithTag)
 }

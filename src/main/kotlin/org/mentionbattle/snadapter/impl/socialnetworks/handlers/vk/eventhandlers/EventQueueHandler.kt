@@ -7,7 +7,7 @@ import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
 import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.objects.VkAccount
 import java.util.*
 
-class EventQueueHandler(val eventQueue: PrimitiveEventQueue) : VkEventHandler {
+class EventQueueHandler(val eventQueue: PrimitiveEventQueue) : VkMsgHandler {
     override fun handle(message: StreamingCallbackMessage,
                         hashedTags: HashedTagToContentendIdWithTag) {
         val contanders = MutableList(2, { false })

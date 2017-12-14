@@ -6,36 +6,37 @@ import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
 import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
 import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
-import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.VkStreamingServiceOfficial
+import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.VkStreamingService
 import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.eventhandlers.EventQueueHandler
 import org.mentionbattle.snadapter.impl.socialnetworks.handlers.vk.eventhandlers.LogHandler
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.Tags
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.VkServiceAuth
 
-@SocialNetwork("VK")
+@SocialNetwork("vk")
 internal class VkHandler(auth: VkServiceAuth, tags: Tags, eventQueue: PrimitiveEventQueue)
     : SocialNetworkHandler, EventHandler {
 
     var isWorking = true
     val eventQueue = eventQueue
-    val vk = VkStreamingServiceOfficial(auth, tags, eventQueue)
+    val vk = VkStreamingService(auth, tags, eventQueue)
 
     override fun handleEvent(event: Event) {
         when (event) {
             is ExitEvent -> {
-                isWorking = false
                 eventQueue.removeHandler(this)
                 vk.close()
+                isWorking = false
             }
         }
     }
 
     override fun processData() {
-            eventQueue.addHandler(this)
+        eventQueue.addHandler(this)
 
-            vk.addHandler(LogHandler())
-            vk.addHandler(EventQueueHandler(eventQueue))
+        vk.addMsgHandler(LogHandler())
+        vk.addMsgHandler(EventQueueHandler(eventQueue))
 
-            vk.startListenEvents()
+        vk.ensureRules()
+        vk.startListenMsgStream()
     }
 }
