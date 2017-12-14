@@ -13,6 +13,7 @@ import org.mentionbattle.snadapter.impl.startup.components.ComponentSystem
 import org.mentionbattle.snadapter.impl.startup.components.ReflectionComponent
 import org.mentionbattle.snadapter.impl.startup.configuration.Configuration
 import org.mentionbattle.snadapter.impl.startup.configuration.ConfigurationParser
+import kotlin.concurrent.thread
 
 class StartUpManager : AutoCloseable {
 
@@ -76,14 +77,14 @@ class StartUpManager : AutoCloseable {
 
 
     suspend fun run() {
-        val jobs = mutableListOf<Job>()
+        val jobs = mutableListOf<Thread>()
         val core = ComponentSystem.getComponent(Core::class.java) as Core
         launch {
             core.run(configuration)
         }
         for (k in socialNetworks.keys) {
             jobs.add(
-                    launch {
+                    thread {
                         try {
                             socialNetworks[k]?.processData()
                         } catch (e: Exception) {
