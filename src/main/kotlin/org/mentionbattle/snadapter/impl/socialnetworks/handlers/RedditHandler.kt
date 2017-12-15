@@ -45,7 +45,7 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
                 }
             }
         }
-
+        eventQueue.removeHandler(this)
     }
 
     override fun processData() {
