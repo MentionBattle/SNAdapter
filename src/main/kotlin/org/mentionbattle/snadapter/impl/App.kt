@@ -12,7 +12,7 @@ fun main(args : Array<String>) {
 
     val configuration = ConfigurationParser().parse(Paths.get("sna.config"))
     StartUpManager(configuration, listOf("org.mentionbattle")).use {
-        launch {
+        runBlocking {
             it.run()
         }
         while (true) {

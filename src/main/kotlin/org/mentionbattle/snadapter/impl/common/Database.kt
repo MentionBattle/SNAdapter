@@ -59,7 +59,7 @@ class Database(map : HashMap<String, Any>) {
         }
     }
 
-    private fun getConnection(): Connection {
+    fun getConnection(): Connection {
         return DriverManager.getConnection("jdbc:sqlite:$name.db");
     }
 }
