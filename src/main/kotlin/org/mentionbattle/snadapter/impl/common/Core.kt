@@ -4,6 +4,8 @@ import org.json.JSONObject
 import org.mentionbattle.snadapter.api.core.Component
 import org.mentionbattle.snadapter.api.core.eventsystem.Event
 import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
+import org.mentionbattle.snadapter.impl.common.Utils.readString
+import org.mentionbattle.snadapter.impl.common.Utils.sendString
 import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
 import org.mentionbattle.snadapter.impl.eventsystem.MentionEvent
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
