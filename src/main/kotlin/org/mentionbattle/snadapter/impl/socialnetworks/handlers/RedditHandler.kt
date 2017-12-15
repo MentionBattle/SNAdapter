@@ -58,19 +58,7 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
                 if (comment.date.after(timestamp)) {
                     current = comment.date
 
-                    var contenderIds = intArrayOf()
-                    for (key in tags.contenderA) {
-                        if (comment.text.contains(key, true)) {
-                            contenderIds = contenderIds.plus(1)
-                            break
-                        }
-                    }
-                    for (key in tags.contenderB) {
-                        if (comment.text.contains(key, true)) {
-                            contenderIds = contenderIds.plus(2)
-                            break
-                        }
-                    }
+                    val contenderIds = calculate(comment.text, tags)
                     for (id in contenderIds) {
                         eventQueue.addEvent(MentionEvent(id, "reddit",
                                 comment.url,
