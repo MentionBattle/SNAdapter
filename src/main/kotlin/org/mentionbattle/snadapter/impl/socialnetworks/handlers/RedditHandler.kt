@@ -10,9 +10,14 @@ import org.mentionbattle.snadapter.api.core.eventsystem.Event
 import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
 import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
 import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
+import org.mentionbattle.snadapter.impl.eventsystem.MentionEvent
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
+import org.mentionbattle.snadapter.impl.socialnetworks.handlers.reddit.parseRedditResponse
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.RedditAuth
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.Tags
+import java.time.Instant
+import java.util.*
+import java.util.Date.from
 
 
 /**
@@ -24,17 +29,14 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
     private val redditClient: RedditClient
     private val tags = tags
     private val eventQueue = eventQueue
+    private var timespamp = Date()
 
     init {
         work = true
-        val userAgent = UserAgent("bot", redditAuth.url, "v0.1", redditAuth.user)
+        val userAgent = UserAgent("MentionBattle", redditAuth.url, "v0.1", redditAuth.user)
         val adapter = OkHttpNetworkAdapter(userAgent)
-        redditClient = OAuthHelper.automatic(
-                adapter,
-                Credentials.webapp(
-                        redditAuth.clientID,
-                        redditAuth.clientSecret,
-                        redditAuth.redirectUrl))
+        val credentials = Credentials.userless(redditAuth.clientID, redditAuth.clientSecret, UUID.randomUUID())
+        redditClient = OAuthHelper.automatic(adapter, credentials)
     }
 
     override fun handleEvent(event: Event) {
@@ -49,13 +51,41 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
     }
 
     override fun processData() {
-
         while (work) {
-            val response = redditClient.request { it.url("https://www.reddit.com/r/all/comments/.json?limit=1") }
-            println(response.body)
+            val response = redditClient.request { it.url("http://www.reddit.com/r/all/comments/.json?limit=100") }
+            val comments = parseRedditResponse(response.body)
 
-            Thread.sleep(1000)
+            var current = timespamp
+            for (comment in comments) {
+                if (comment.date.after(timespamp)) {
+                    current = comment.date
+
+                    var contenderIds = intArrayOf()
+                    for (key in tags.contenderA) {
+                        if (comment.text.contains(key, true)) {
+                            contenderIds = contenderIds.plus(1)
+                            break
+                        }
+                    }
+                    for (key in tags.contenderB) {
+                        if (comment.text.contains(key, true)) {
+                            contenderIds = contenderIds.plus(2)
+                            break
+                        }
+                    }
+                    for (id in contenderIds) {
+                        eventQueue.addEvent(MentionEvent(id, "reddit",
+                                comment.url,
+                                comment.user,
+                                comment.text,
+                                "http://i.imgur.com/sdO8tAw.png",
+                                comment.date))
+                    }
+                }
+            }
+            timespamp = current
+
+            Thread.sleep(2000)
         }
     }
-
 }
