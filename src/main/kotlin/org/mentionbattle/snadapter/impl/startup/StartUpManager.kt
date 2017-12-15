@@ -15,16 +15,14 @@ import org.mentionbattle.snadapter.impl.startup.configuration.Configuration
 import org.mentionbattle.snadapter.impl.startup.configuration.ConfigurationParser
 import kotlin.concurrent.thread
 
-class StartUpManager : AutoCloseable {
+class StartUpManager(val configuration : Configuration, packages : List<String>) : AutoCloseable {
 
-    private lateinit var socialNetworks: Map<String, SocialNetworkHandler>
-    private lateinit var configuration: Configuration
+    internal lateinit var socialNetworks: Map<String, SocialNetworkHandler>
+    private val threads = mutableListOf<Thread>()
 
-    fun initialize(packages: List<String>) {
-        configuration = ConfigurationParser().parse("sna.config")
+    init {
         //setup components
         setupComponents(configuration, packages)
-
         //setup social networks
         socialNetworks = setupSocialNetworks(configuration)
     }
@@ -77,7 +75,6 @@ class StartUpManager : AutoCloseable {
 
 
     suspend fun run() {
-        val threads = mutableListOf<Thread>()
         val core = ComponentSystem.getComponent(Core::class.java) as Core
         launch {
             core.run(configuration)
@@ -94,23 +91,15 @@ class StartUpManager : AutoCloseable {
                     }
             )
         }
-        while (true) {
-            val result = readLine()
-            if (result.equals("exit")) {
-                break
-            }
-        }
+    }
 
+    override fun close() {
         System.err.println("Log :: Shutdown started...")
         var eventQueue = ComponentSystem.getComponent(PrimitiveEventQueue::class.java) as PrimitiveEventQueue
         eventQueue.addEvent(ExitEvent())
         threads.forEach({ j ->
             j.join()
         })
-    }
-
-    override fun close() {
-
     }
 
 }

@@ -1,16 +1,24 @@
 package org.mentionbattle.snadapter.impl
 
+import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
 import org.mentionbattle.snadapter.impl.eventsystem.MentionEvent
 import org.mentionbattle.snadapter.impl.startup.StartUpManager
+import org.mentionbattle.snadapter.impl.startup.configuration.ConfigurationParser
 import java.util.*
 
 fun main(args : Array<String>) {
 
-    StartUpManager().use {
-        it.initialize(listOf("org.mentionbattle"))
-        runBlocking {
+    val configuration = ConfigurationParser().parse("sna.config")
+    StartUpManager(configuration, listOf("org.mentionbattle")).use {
+        launch {
             it.run()
+        }
+        while (true) {
+            val result = readLine()
+            if (result.equals("exit")) {
+                break
+            }
         }
     }
 }

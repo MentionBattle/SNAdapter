@@ -1,4 +1,4 @@
-package testComponents
+package org.mentionbattle.snadapter.impl.startup.components.testComponents
 
 import org.mentionbattle.snadapter.api.core.Component
 

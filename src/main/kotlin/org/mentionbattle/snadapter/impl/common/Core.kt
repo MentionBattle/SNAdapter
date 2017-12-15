@@ -109,7 +109,7 @@ class Core(private val eventQueue: PrimitiveEventQueue, private val database: Da
                 "mentions" to arrayListOf<JSONObject>()
                 ))
     }
-    fun queryVotesFromDatabase(contender : Contender) : Int {
+    private fun queryVotesFromDatabase(contender : Contender) : Int {
         return database.contenderMentionCount(contender)
     }
 }

@@ -4,7 +4,7 @@ import java.io.*
 import java.net.Socket
 
 
-fun InputStream.readInt(): Int {
+private fun InputStream.readInt(): Int {
     val ch1 = this.read()
     val ch2 = this.read()
     val ch3 = this.read()
@@ -14,7 +14,7 @@ fun InputStream.readInt(): Int {
     return (ch1 shl 24) + (ch2 shl 16) + (ch3 shl 8) + (ch4 shl 0)
 }
 
-fun OutputStream.writeInt(v: Int) {
+private fun OutputStream.writeInt(v: Int) {
     this.write(v.ushr(24) and 0xFF)
     this.write(v.ushr(16) and 0xFF)
     this.write(v.ushr(8) and 0xFF)
