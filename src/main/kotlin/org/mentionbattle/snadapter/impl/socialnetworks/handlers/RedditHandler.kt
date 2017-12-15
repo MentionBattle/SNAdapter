@@ -15,9 +15,7 @@ import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
 import org.mentionbattle.snadapter.impl.socialnetworks.handlers.reddit.parseRedditResponse
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.RedditAuth
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.Tags
-import java.time.Instant
 import java.util.*
-import java.util.Date.from
 
 
 /**
@@ -29,7 +27,7 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
     private val redditClient: RedditClient
     private val tags = tags
     private val eventQueue = eventQueue
-    private var timespamp = Date()
+    private var timestamp = Date()
 
     init {
         work = true
@@ -55,9 +53,9 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
             val response = redditClient.request { it.url("http://www.reddit.com/r/all/comments/.json?limit=100") }
             val comments = parseRedditResponse(response.body)
 
-            var current = timespamp
+            var current = timestamp
             for (comment in comments) {
-                if (comment.date.after(timespamp)) {
+                if (comment.date.after(timestamp)) {
                     current = comment.date
 
                     var contenderIds = intArrayOf()
@@ -83,7 +81,7 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
                     }
                 }
             }
-            timespamp = current
+            timestamp = current
 
             Thread.sleep(2000)
         }
