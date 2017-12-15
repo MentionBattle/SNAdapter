@@ -14,12 +14,12 @@ import java.net.Socket
 import java.net.SocketException
 
 @Component
-class Core(eventQueue: PrimitiveEventQueue) : EventHandler {
+class Core(private val eventQueue: PrimitiveEventQueue, private val database: Database) : EventHandler {
 
-    private val eventQueue = eventQueue
     private val clients : MutableList<Socket> = mutableListOf<Socket>()
     private lateinit var server : ServerSocket
     private lateinit var firstAnswer : String
+    private lateinit var configuration : Configuration
 
     override fun handleEvent(event : Event) {
         when (event) {
@@ -33,13 +33,14 @@ class Core(eventQueue: PrimitiveEventQueue) : EventHandler {
                 System.err.println("LOG :: " + event.text)
             }
             is MentionEvent -> {
+                database.addMention(event)
                 notifyAllClients(event)
             }
         }
     }
 
     suspend fun run(configuration: Configuration) {
-        firstAnswer = createFirstAnswer(configuration)
+        this.configuration = configuration
         eventQueue.addHandler(this)
         server = ServerSocket(configuration.port)
         try {
@@ -60,7 +61,7 @@ class Core(eventQueue: PrimitiveEventQueue) : EventHandler {
             val answer = client.readString()
 
             if (answer.equals("%server%")) {
-                client.sendString(firstAnswer)
+                client.sendString(createFirstAnswer(configuration))
                 clients.add(client)
             } else {
                 client.close()
@@ -101,12 +102,12 @@ class Core(eventQueue: PrimitiveEventQueue) : EventHandler {
         return JSONObject(hashMapOf(
                 "name" to contender.name,
                 "image" to contender.packImageToBase64(),
-                "votes" to queryVotesFromDatabase(contender.name),
+                "votes" to queryVotesFromDatabase(contender),
                 "rate" to 0,
                 "mentions" to arrayListOf<JSONObject>()
                 ))
     }
-    fun queryVotesFromDatabase(contender : String) : Int {
-        return 0
+    fun queryVotesFromDatabase(contender : Contender) : Int {
+        return database.contenderMentionCount(contender)
     }
 }

@@ -5,8 +5,7 @@ import java.nio.file.FileSystem
 import java.nio.file.FileSystems
 import java.util.*
 
-class Contender (name : String, path : String) {
-    val name = name;
+class Contender (val id : Int, val name : String,  path : String) {
     val path : String
 
     init {
