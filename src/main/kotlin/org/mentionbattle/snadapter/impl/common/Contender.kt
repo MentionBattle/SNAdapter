@@ -21,9 +21,16 @@ class Contender (val id : Int, val name : String,  path : String) {
 
     fun packImageToBase64() : String {
         val result = mutableListOf<Byte>()
-        BufferedReader(InputStreamReader(FileInputStream(path))).use { br ->
-            val result = br.lines().collect(Collectors.joining("\n"))
-            return "data:image/${getImageFormat()};base64," + Base64.getEncoder().encodeToString(result.toByteArray());
+            FileInputStream(path).use {
+            var t : ByteArray;
+            while (true) {
+                t = it.readBytes()
+                if (t.isEmpty()) {
+                    break;
+                }
+                result.addAll(t.toList())
+            }
         }
+        return "data:image/${getImageFormat()};base64," + Base64.getEncoder().encodeToString(result.toByteArray());
     }
 }

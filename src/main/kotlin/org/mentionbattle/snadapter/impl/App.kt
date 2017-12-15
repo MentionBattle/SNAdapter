@@ -16,7 +16,7 @@ fun main(args : Array<String>) {
             it.run()
         }
         while (true) {
-            val result = readLine()
+            val result = ""
             if (result.equals("exit")) {
                 break
             }

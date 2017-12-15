@@ -1,5 +1,6 @@
 package org.mentionbattle.snadapter.impl.common
 
+import io.netty.handler.logging.LogLevel
 import org.apache.logging.log4j.Level
 import org.apache.logging.log4j.LogManager
 import org.json.JSONObject
@@ -16,6 +17,8 @@ import org.mentionbattle.snadapter.impl.startup.configuration.Configuration
 import java.net.ServerSocket
 import java.net.Socket
 import java.net.SocketException
+import java.nio.file.Files
+import java.nio.file.Paths
 
 @Component
 class Core(private val eventQueue: PrimitiveEventQueue, private val database: Database) : EventHandler {
@@ -39,7 +42,7 @@ class Core(private val eventQueue: PrimitiveEventQueue, private val database: Da
                 logger.log(Level.INFO, event.text)
             }
             is MentionEvent -> {
-                rates[event.contender]?.plus(1)
+                rates[event.contender] = (rates[event.contender]!! + 1) as Int
                 database.addMention(event)
                 notifyAllClients(event)
             }
@@ -113,16 +116,20 @@ class Core(private val eventQueue: PrimitiveEventQueue, private val database: Da
         for (c in configuration.contenders) {
             contendersJson.add(createContenderJson(c))
         }
-        return JSONObject(hashMapOf("contenders" to  contendersJson)).toString()
+        val firstAnswer = JSONObject(hashMapOf("contenders" to  contendersJson)).toString()
+
+        Files.write(Paths.get("dump.txt"), firstAnswer.toString().toByteArray())
+        return firstAnswer
     }
 
     private fun createContenderJson(contender: Contender) : JSONObject {
+        val mentions = database.getLastContendersMentions(100, contender)
         return JSONObject(hashMapOf(
                 "name" to contender.name,
                 "image" to contender.packImageToBase64(),
                 "votes" to rates[contender.id],
                 "rate" to 0,
-                "mentions" to arrayListOf<JSONObject>()
+                "mentions" to mentions
                 ))
     }
     private fun queryVotesFromDatabase(contender : Contender) : Int {
