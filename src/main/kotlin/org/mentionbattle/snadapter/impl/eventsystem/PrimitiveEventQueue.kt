@@ -6,7 +6,7 @@ import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
 import org.mentionbattle.snadapter.api.core.eventsystem.EventQueue
 
 @Component
-class PrimitiveEventQueue : EventQueue {
+open class PrimitiveEventQueue : EventQueue {
     val handlers: MutableList<EventHandler> = mutableListOf()
 
     private val toRemove : MutableList<EventHandler> = mutableListOf()

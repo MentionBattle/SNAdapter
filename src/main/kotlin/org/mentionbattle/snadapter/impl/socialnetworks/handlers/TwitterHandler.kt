@@ -25,7 +25,7 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
     private lateinit var twitterStream: TwitterStream
     private val tweetURLScheme = "https://twitter.com/%s/status/%s"
 
-    private val listener = object : StatusListener {
+    val listener = object : StatusListener {
         override fun onStatus(status: Status) {
             var contenderIds = intArrayOf()
             for (key in tags.contenderA) {
@@ -61,7 +61,6 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
         }
     }
 
-
     override fun handleEvent(event: Event) {
         when (event) {
             is ExitEvent -> {
@@ -87,5 +86,4 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
         twitterStream.filter(FilterQuery(trackList))
         eventQueue.addHandler(this)
     }
-
 }
