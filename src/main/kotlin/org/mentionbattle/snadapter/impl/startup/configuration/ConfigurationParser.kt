@@ -3,15 +3,22 @@ package org.mentionbattle.snadapter.impl.startup.configuration
 import org.json.JSONArray
 import org.json.JSONObject
 import org.mentionbattle.snadapter.impl.common.Contender
+import java.io.DataInputStream
+import java.io.FileInputStream
+import java.io.InputStream
+import java.io.StringReader
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.stream.Collectors
+import java.io.InputStreamReader
+import java.io.BufferedReader
+
+
 
 class ConfigurationParser {
-    fun parse(path : String) : Configuration {
-        if (!Files.exists(Paths.get(path)))  {
-            throw ConfigurationParserException("The file does not exist")
-        }
-        val text = Files.readAllLines(Paths.get(path)).joinToString(separator = "")
+
+    fun parse(text : String) : Configuration{
         val json = JSONObject(text)
 
         val port = json["port"] as Int
@@ -34,6 +41,20 @@ class ConfigurationParser {
         config.contenders.add(parseContender(json["contenderA"] as JSONObject))
         config.contenders.add(parseContender(json["contenderB"] as JSONObject))
         return config
+    }
+
+    fun parse(stream : InputStream) : Configuration {
+        BufferedReader(InputStreamReader(stream)).use { br ->
+            val result = br.lines().collect(Collectors.joining("\n"))
+            return parse(result)
+        }
+    }
+
+    fun parse(path : Path) : Configuration {
+        if (!Files.exists(path))  {
+            throw ConfigurationParserException("The file does not exist")
+        }
+        return parse(Files.readAllLines(path).joinToString(separator = ""))
     }
 
     private fun parseInitializer(initializer : JSONObject): MutableMap<String, Any> {

@@ -4,13 +4,16 @@ import kotlinx.coroutines.experimental.runBlocking
 import org.junit.*
 import org.mentionbattle.snadapter.impl.startup.components.ComponentSystem
 import org.mentionbattle.snadapter.impl.startup.configuration.ConfigurationParser
+import java.nio.file.Paths
 import kotlin.concurrent.thread
 
 
 internal class StartUpManagerTest {
+    private val resourcesFolder = Paths.get("src", "test", "resources")
+    val configuration = ConfigurationParser().parse(resourcesFolder.resolve("testsna.config"))
+
     @Test
     fun StartUpTest() {
-        val configuration = ConfigurationParser().parse("testsna.config")
         StartUpManager(configuration, listOf("org.mentionbattle")).use {
             configuration.socialNetworks.forEach { n ->
                 if (!(n in it.socialNetworks.keys)) {
@@ -22,7 +25,6 @@ internal class StartUpManagerTest {
 
     @Test
     fun StartUpCloseTest() {
-        val configuration = ConfigurationParser().parse("testsna.config")
         var startUpManger: StartUpManager? = null
         try {
             startUpManger = StartUpManager(configuration, listOf("org.mentionbattle"))
