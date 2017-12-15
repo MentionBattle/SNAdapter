@@ -5,6 +5,7 @@ import com.vk.api.sdk.client.actors.ServiceActor
 import com.vk.api.sdk.httpclient.HttpTransportClient
 import com.vk.api.sdk.objects.streaming.responses.GetServerUrlResponse
 import com.vk.api.sdk.streaming.clients.StreamingEventHandler
+import com.vk.api.sdk.streaming.clients.VkStreamingApiClient
 import com.vk.api.sdk.streaming.clients.actors.StreamingActor
 import com.vk.api.sdk.streaming.objects.StreamingCallbackMessage
 import com.vk.api.sdk.streaming.objects.StreamingRule
@@ -34,7 +35,7 @@ internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: P
     private var eventQueue = eventQueue
     private var isConnected = false
 
-    private lateinit var streamingClient: ClosableVkStreamingApiClient
+    private lateinit var streamingClient: VkStreamingApiClient
     private lateinit var apiClient: VkApiClient
     private lateinit var streamingActor: StreamingActor
     private lateinit var serviceActor: ServiceActor
@@ -72,7 +73,7 @@ internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: P
     private fun initApiConnection() {
         logger.info("connect to vk server")
         val transportClient = HttpTransportClient()
-        streamingClient = ClosableVkStreamingApiClient(transportClient)
+        streamingClient = VkStreamingApiClient(transportClient)
         apiClient = VkApiClient(transportClient)
 
         serviceActor = ServiceActor(auth.appId, auth.serviceToken)
