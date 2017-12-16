@@ -17,7 +17,7 @@ class Database(map : HashMap<String, Any>) {
     private val name : String by map
     private val lockObject : Any = Any()
     init {
-        DriverManager.getConnection("jdbc:sqlite:$name.db").use { c ->
+        getConnection().use { c ->
             val sql = "CREATE TABLE IF NOT EXISTS MENTIONS" +
                     "(ID             INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
                     " Contender      INTEGER    NOT NULL, " +
@@ -35,7 +35,7 @@ class Database(map : HashMap<String, Any>) {
         synchronized(lockObject) {
 
             try {
-                DriverManager.getConnection("jdbc:sqlite:$name.db").use { c ->
+                getConnection().use { c ->
                     val sql = "INSERT INTO MENTIONS " +
                             "(Contender, Mention, Time) VALUES " +
                             "(${mentionEvent.contender}, " +
@@ -55,7 +55,7 @@ class Database(map : HashMap<String, Any>) {
         synchronized(lockObject) {
 
             try {
-                DriverManager.getConnection("jdbc:sqlite:$name.db").use { c ->
+                getConnection().use { c ->
 
                     val sql = "DELETE FROM MENTIONS WHERE MENTIONS.Contender = $contender and MENTIONS.ID not in " +
                             "(SELECT MENTIONS2.ID FROM MENTIONS AS MENTIONS2 WHERE MENTIONS2.Contender = $contender ORDER BY" +
@@ -73,7 +73,7 @@ class Database(map : HashMap<String, Any>) {
     fun contenderMentionCount(contender: Contender) : Int {
         synchronized(lockObject) {
             try {
-                DriverManager.getConnection("jdbc:sqlite:$name.db").use { c ->
+                getConnection().use { c ->
                     c.createStatement().use { stmt ->
                         stmt.executeQuery("SELECT COUNT() as TOTAL FROM MENTIONS " +
                                 "WHERE MENTIONS.Contender = ${contender.id}").use {
@@ -90,7 +90,7 @@ class Database(map : HashMap<String, Any>) {
 
     fun getLastContendersMentions(count : Int, contender: Contender) : Array<JSONObject>{
         synchronized(lockObject) {
-            DriverManager.getConnection("jdbc:sqlite:$name.db").use { c ->
+            getConnection().use { c ->
                 c.prepareStatement("SELECT MENTION FROM MENTIONS WHERE MENTIONS.Contender = ${contender.id} " +
                         "ORDER BY date(TIME) DESC LIMIT 100").use { stmt ->
                     stmt.executeQuery().use { result ->
@@ -105,5 +105,9 @@ class Database(map : HashMap<String, Any>) {
                 }
             }
         }
+    }
+
+    fun getConnection() : Connection {
+        return DriverManager.getConnection("jdbc:sqlite:$name.db")
     }
 }
