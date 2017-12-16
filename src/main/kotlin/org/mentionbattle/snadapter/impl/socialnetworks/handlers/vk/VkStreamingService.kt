@@ -86,7 +86,7 @@ internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: P
 
     private fun getAllRules(): List<StreamingRule> {
         val rulesResponse: StreamingGetRulesResponse = streamingClient.rules().get(streamingActor).execute()
-        return rulesResponse.rules
+        return rulesResponse.rules ?:  Collections.emptyList()
     }
 
     private fun addRule(ruleInfo: RuleInfo) {
