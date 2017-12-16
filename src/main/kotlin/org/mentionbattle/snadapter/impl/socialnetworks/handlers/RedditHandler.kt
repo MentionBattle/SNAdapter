@@ -45,9 +45,9 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
                 synchronized(work) {
                     work = false
                 }
+                eventQueue.removeHandler(this)
             }
         }
-        eventQueue.removeHandler(this)
     }
 
     override fun processData() {
