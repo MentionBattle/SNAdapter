@@ -4,33 +4,88 @@ import org.mentionbattle.snadapter.api.core.SocialNetwork
 import org.mentionbattle.snadapter.api.core.eventsystem.Event
 import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
 import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
-import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
-import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
-import org.mentionbattle.snadapter.impl.eventsystem.LogEvent
+import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.Tags
+import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.TwitterTokens
 
+import org.mentionbattle.snadapter.impl.eventsystem.*
+import twitter4j.Status;
+import twitter4j.conf.ConfigurationBuilder;
+import twitter4j.StallWarning
+import twitter4j.StatusDeletionNotice
+import twitter4j.StatusListener
+import twitter4j.FilterQuery
+import twitter4j.TwitterStreamFactory
+import twitter4j.TwitterStream
 
 @SocialNetwork("Twitter")
-internal class TwitterHandler(eventQueue : PrimitiveEventQueue) : SocialNetworkHandler, EventHandler {
+internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: PrimitiveEventQueue) : SocialNetworkHandler, EventHandler {
+    private val eventQueue = eventQueue
+    private val tags = tags
+    private val tokens = token
+    private lateinit var twitterStream: TwitterStream
+    private val tweetURLScheme = "https://twitter.com/%s/status/%s"
 
-    val eventQueue = eventQueue
-    var isWorking = true
-    override fun handleEvent(event: Event) {
-        when (event) {
-            is ExitEvent -> {
-                isWorking = false
-                eventQueue.removeHandler(this)
+    private val listener = object : StatusListener {
+        override fun onStatus(status: Status) {
+            var contenderIds = intArrayOf()
+            for (key in tags.contenderA) {
+                if (status.text.contains(key, true)) {
+                    contenderIds = contenderIds.plus(1)
+                    break
+                }
             }
+            for (key in tags.contenderB) {
+                if (status.text.contains(key, true)) {
+                    contenderIds = contenderIds.plus(2)
+                    break
+                }
+            }
+            for (id in contenderIds) {
+                eventQueue.addEvent(MentionEvent(id, "twitter",
+                        tweetURLScheme.format(status.user.screenName, status.id.toString()),
+                        status.user.name, status.text, status.user.profileImageURLHttps.toString(),
+                        status.createdAt))
+            }
+        }
+
+        override fun onDeletionNotice(statusDeletionNotice: StatusDeletionNotice) {}
+
+        override fun onTrackLimitationNotice(numberOfLimitedStatuses: Int) {}
+
+        override fun onScrubGeo(userId: Long, upToStatusId: Long) {}
+
+        override fun onStallWarning(warning: StallWarning) {}
+
+        override fun onException(ex: Exception) {
+            eventQueue.addEvent(LogEvent(ex.localizedMessage))
         }
     }
 
 
-    override fun processData() {
-        eventQueue.addHandler(this)
-        while (isWorking) {
-            eventQueue.addEvent(LogEvent("twitter adds event"))
-            Thread.sleep(3000)
+    override fun handleEvent(event: Event) {
+        when (event) {
+            is ExitEvent -> {
+                twitterStream.cleanUp(); // shutdown internal stream consuming thread
+                twitterStream.shutdown(); // Shuts down internal dispatcher thread shared by all TwitterStream instan
+                eventQueue.removeHandler(this)
+                println("Twitter job cancelled")
+            }
         }
-        println("Twitter job cancelled")
+    }
+
+    override fun processData() {
+        val cb = ConfigurationBuilder()
+        cb.setDebugEnabled(true)
+                .setOAuthConsumerKey(tokens.consumerKey)
+                .setOAuthConsumerSecret(tokens.consumerSecret)
+                .setOAuthAccessToken(tokens.accessToken)
+                .setOAuthAccessTokenSecret(tokens.accessTokenSecret)
+        twitterStream = TwitterStreamFactory(cb.build()).instance
+        Twitter4jFixer.addListener(twitterStream, listener)
+        val track = emptyArray<String>().plus(tags.contenderA).plus(tags.contenderB)
+        val trackList = track.joinToString(",")
+        twitterStream.filter(FilterQuery(trackList))
+        eventQueue.addHandler(this)
     }
 
 }

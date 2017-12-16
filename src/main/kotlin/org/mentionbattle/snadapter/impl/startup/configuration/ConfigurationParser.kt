@@ -62,6 +62,7 @@ class ConfigurationParser {
     private fun parseContender(contenderJson : JSONObject) : Contender {
         val name =  contenderJson["name"] as String
         val imagePath = contenderJson["image"] as String
-        return Contender(name, imagePath)
+        val id = contenderJson["id"] as Int
+        return Contender(id, name, imagePath)
     }
 }

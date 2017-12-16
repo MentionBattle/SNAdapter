@@ -1,8 +1,11 @@
 package org.mentionbattle.snadapter.impl.common
 
+import org.json.JSONObject
 import org.mentionbattle.snadapter.api.core.Component
 import org.mentionbattle.snadapter.api.core.eventsystem.Event
 import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
+import org.mentionbattle.snadapter.impl.common.Utils.readString
+import org.mentionbattle.snadapter.impl.common.Utils.sendString
 import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
 import org.mentionbattle.snadapter.impl.eventsystem.MentionEvent
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
@@ -13,12 +16,12 @@ import java.net.Socket
 import java.net.SocketException
 
 @Component
-class Core(eventQueue: PrimitiveEventQueue) : EventHandler {
+class Core(private val eventQueue: PrimitiveEventQueue, private val database: Database) : EventHandler {
 
-    private val eventQueue = eventQueue
     private val clients : MutableList<Socket> = mutableListOf<Socket>()
     private lateinit var server : ServerSocket
     private lateinit var firstAnswer : String
+    private lateinit var configuration : Configuration
 
     override fun handleEvent(event : Event) {
         when (event) {
@@ -32,13 +35,14 @@ class Core(eventQueue: PrimitiveEventQueue) : EventHandler {
                 System.err.println("LOG :: " + event.text)
             }
             is MentionEvent -> {
+                database.addMention(event)
                 notifyAllClients(event)
             }
         }
     }
 
     suspend fun run(configuration: Configuration) {
-        firstAnswer = createFirstAnswer(configuration)
+        this.configuration = configuration
         eventQueue.addHandler(this)
         server = ServerSocket(configuration.port)
         try {
@@ -59,7 +63,7 @@ class Core(eventQueue: PrimitiveEventQueue) : EventHandler {
             val answer = client.readString()
 
             if (answer.equals("%server%")) {
-                client.sendString(firstAnswer)
+                client.sendString(createFirstAnswer(configuration))
                 clients.add(client)
             } else {
                 client.close()
@@ -74,7 +78,7 @@ class Core(eventQueue: PrimitiveEventQueue) : EventHandler {
             val toRemove = mutableListOf<Socket>()
             for (c in clients) {
                 try {
-                    c.sendString("mention|" + event.packToJson())
+                    c.sendString("mention|" + event.createJson())
                 } catch (e : SocketException) {
                     toRemove.add(c)
                 }
@@ -88,30 +92,24 @@ class Core(eventQueue: PrimitiveEventQueue) : EventHandler {
         }
     }
 
-    fun createFirstAnswer(configuration: Configuration) : String {
-        val sb = StringBuilder()
-        val first = configuration.contenders[0]
-        val second = configuration.contenders[1]
-        sb.append("init|{").
-            append("\"contender1\":{").
-                append("\"name\": \"").append(first.name).append("\"").append(",").
-                append("\"image\": \"").append(first.packImageToBase64()).append("\"").append(",").
-                append("\"votes\": ").append(queryVotesFromDatabase(first.name)).append(",").
-                append("\"rate\": ").append(0).append(",").
-                append("\"mentions\": []").
-            append("}").append(",").
-            append("\"contender2\":{").
-                append("\"name\": \"").append(second.name).append("\"").append(",").
-                append("\"image\": \"").append(second.packImageToBase64()).append("\"").append(",").
-                append("\"votes\": ").append(queryVotesFromDatabase(second.name)).append(",").
-                append("\"rate\": ").append(0).append(",").
-                append("\"mentions\": []").
-            append("}").
-        append("}")
-        return sb.toString()
+    private fun createFirstAnswer(configuration: Configuration) : String {
+        val contendersJson = mutableListOf<JSONObject>()
+        for (c in configuration.contenders) {
+            contendersJson.add(createContenderJson(c))
+        }
+        return "init|" + JSONObject(hashMapOf("contenders" to  contendersJson))
     }
 
-    fun queryVotesFromDatabase(contender : String) : Int {
-        return 0
+    private fun createContenderJson(contender: Contender) : JSONObject {
+        return JSONObject(hashMapOf(
+                "name" to contender.name,
+                "image" to contender.packImageToBase64(),
+                "votes" to queryVotesFromDatabase(contender),
+                "rate" to 0,
+                "mentions" to arrayListOf<JSONObject>()
+                ))
+    }
+    fun queryVotesFromDatabase(contender : Contender) : Int {
+        return database.contenderMentionCount(contender)
     }
 }

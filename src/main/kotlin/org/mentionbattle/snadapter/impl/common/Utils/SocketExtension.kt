@@ -1,4 +1,4 @@
-package org.mentionbattle.snadapter.impl.common
+package org.mentionbattle.snadapter.impl.common.Utils
 
 import java.io.*
 import java.net.Socket
