@@ -98,9 +98,7 @@ internal class VkStreamingService(auth: VkServiceAuth, tags: Tags, eventQueue: P
     }
 
     private fun deleteRule(tag: String) {
-        if (!hashedTags.containsKey(tag)) return
-
-        logger.info("delete rule: tag=$tag value=${hashedTags[tag]?.second ?: ""}\"")
+        logger.info("delete rule: tag=$tag")
         val response: StreamingResponse = streamingClient.rules().delete(streamingActor, tag).execute()
     }
 
