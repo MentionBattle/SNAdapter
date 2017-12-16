@@ -31,6 +31,7 @@ class Database(map : HashMap<String, Any>) {
     }
 
     fun addMention(mentionEvent: MentionEvent) {
+        removeUnnessary(mentionEvent.contender)
         synchronized(lockObject) {
 
             try {
@@ -38,8 +39,27 @@ class Database(map : HashMap<String, Any>) {
                     val sql = "INSERT INTO MENTIONS " +
                             "(Contender, Mention, Time) VALUES " +
                             "(${mentionEvent.contender}, " +
-                            "\'${StringEscapeUtils.escapeSql(mentionEvent.createJson().toString())}\'," +
+                            "\'${StringEscapeUtils.escapeSql(mentionEvent.createJson()["msg"].toString())}\'," +
                             " datetime('now'))"
+                    c.createStatement().use {
+                        it.executeUpdate(sql)
+                    }
+                }
+            } catch (e: Exception) {
+                throw RuntimeException(e)
+            }
+        }
+    }
+
+    private fun removeUnnessary(contender: Int) {
+        synchronized(lockObject) {
+
+            try {
+                DriverManager.getConnection("jdbc:sqlite:$name.db").use { c ->
+
+                    val sql = "DELETE FROM MENTIONS WHERE MENTIONS.Contender = $contender and MENTIONS.ID not in " +
+                            "(SELECT MENTIONS2.ID FROM MENTIONS AS MENTIONS2 WHERE MENTIONS2.Contender = $contender ORDER BY" +
+                            " date(MENTIONS2.Time) DESC LIMIT 100)"
                     c.createStatement().use {
                         it.executeUpdate(sql)
                     }
