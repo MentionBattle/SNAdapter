@@ -25,19 +25,10 @@ import java.util.*
  */
 @SocialNetwork("Reddit")
 internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: PrimitiveEventQueue) : SocialNetworkHandler, EventHandler {
-    private var work: Boolean
-    private val redditClient: RedditClient
+    private val redditAuth = redditAuth
     private val tags = tags
     private val eventQueue = eventQueue
-    private var timestamp = Date()
-
-    init {
-        work = true
-        val userAgent = UserAgent("MentionBattle", redditAuth.url, "v0.1", redditAuth.user)
-        val adapter = OkHttpNetworkAdapter(userAgent)
-        val credentials = Credentials.userless(redditAuth.clientID, redditAuth.clientSecret, UUID.randomUUID())
-        redditClient = OAuthHelper.automatic(adapter, credentials)
-    }
+    private var work = true
 
     override fun handleEvent(event: Event) {
         when (event) {
@@ -51,6 +42,12 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
     }
 
     override fun processData() {
+        val userAgent = UserAgent("MentionBattle", redditAuth.url, "v0.1", redditAuth.user)
+        val adapter = OkHttpNetworkAdapter(userAgent)
+        val credentials = Credentials.userless(redditAuth.clientID, redditAuth.clientSecret, UUID.randomUUID())
+        val redditClient = OAuthHelper.automatic(adapter, credentials)
+        var timestamp = Date()
+
         while (work) {
             val response = redditClient.request { it.url("http://www.reddit.com/r/all/comments/.json?limit=100") }
             try {
@@ -79,5 +76,6 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
 
             Thread.sleep(2000)
         }
+        eventQueue.addHandler(this)
     }
 }
