@@ -34,4 +34,8 @@ class MsgBeautifier(val apiClient: VkApiClient, val serviceActor: ServiceActor) 
                 { it.value.split("|")[1].substringBefore("]") })
         return replace
     }
+
+    fun shieldExclamationPoint(text: String): String {
+        return text.replace(Regex("""&#33"""), "!")
+    }
 }
