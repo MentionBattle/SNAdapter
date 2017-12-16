@@ -35,6 +35,6 @@ class EventQueueHandler(val eventQueue: PrimitiveEventQueue) : VkMsgHandler {
                 vkAccount.name,
                 cleanedText,
                 vkAccount.avatarUrl,
-                Date(message.event.creationTime.toLong()))
+                Date(message.event.creationTime * 1000L))
     }
 }
