@@ -27,19 +27,7 @@ internal class TwitterHandler(token: TwitterTokens, tags: Tags, eventQueue: Prim
 
     val listener = object : StatusListener {
         override fun onStatus(status: Status) {
-            var contenderIds = intArrayOf()
-            for (key in tags.contenderA) {
-                if (status.text.contains(key, true)) {
-                    contenderIds = contenderIds.plus(1)
-                    break
-                }
-            }
-            for (key in tags.contenderB) {
-                if (status.text.contains(key, true)) {
-                    contenderIds = contenderIds.plus(2)
-                    break
-                }
-            }
+            val contenderIds = calculate(status.text, tags)
             for (id in contenderIds) {
                 eventQueue.addEvent(MentionEvent(id, "twitter",
                         tweetURLScheme.format(status.user.screenName, status.id.toString()),
