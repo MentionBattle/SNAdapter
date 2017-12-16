@@ -47,6 +47,7 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
         val credentials = Credentials.userless(redditAuth.clientID, redditAuth.clientSecret, UUID.randomUUID())
         val redditClient = OAuthHelper.automatic(adapter, credentials)
         var timestamp = Date()
+        redditClient.logHttp = false
 
         while (work) {
             val response = redditClient.request { it.url("http://www.reddit.com/r/all/comments/.json?limit=100") }
