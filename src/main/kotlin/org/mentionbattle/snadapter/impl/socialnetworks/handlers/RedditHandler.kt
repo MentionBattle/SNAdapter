@@ -10,8 +10,10 @@ import org.mentionbattle.snadapter.api.core.eventsystem.Event
 import org.mentionbattle.snadapter.api.core.eventsystem.EventHandler
 import org.mentionbattle.snadapter.api.core.socialnetworks.SocialNetworkHandler
 import org.mentionbattle.snadapter.impl.eventsystem.ExitEvent
+import org.mentionbattle.snadapter.impl.eventsystem.LogEvent
 import org.mentionbattle.snadapter.impl.eventsystem.MentionEvent
 import org.mentionbattle.snadapter.impl.eventsystem.PrimitiveEventQueue
+import org.mentionbattle.snadapter.impl.socialnetworks.handlers.reddit.RedditResponseParserException
 import org.mentionbattle.snadapter.impl.socialnetworks.handlers.reddit.parseRedditResponse
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.RedditAuth
 import org.mentionbattle.snadapter.impl.socialnetworks.initalizers.Tags
@@ -51,25 +53,29 @@ internal class RedditHandler(redditAuth: RedditAuth, tags: Tags, eventQueue: Pri
     override fun processData() {
         while (work) {
             val response = redditClient.request { it.url("http://www.reddit.com/r/all/comments/.json?limit=100") }
-            val comments = parseRedditResponse(response.body)
+            try {
+                val comments = parseRedditResponse(response.body)
 
-            var current = timestamp
-            for (comment in comments) {
-                if (comment.date.after(timestamp)) {
-                    current = comment.date
+                var current = timestamp
+                for (comment in comments) {
+                    if (comment.date.after(timestamp)) {
+                        current = comment.date
 
-                    val contenderIds = calculate(comment.text, tags)
-                    for (id in contenderIds) {
-                        eventQueue.addEvent(MentionEvent(id, "reddit",
-                                comment.url,
-                                comment.user,
-                                comment.text,
-                                "http://i.imgur.com/sdO8tAw.png",
-                                comment.date))
+                        val contenderIds = calculate(comment.text, tags)
+                        for (id in contenderIds) {
+                            eventQueue.addEvent(MentionEvent(id, "reddit",
+                                    comment.url,
+                                    comment.user,
+                                    comment.text,
+                                    "http://i.imgur.com/sdO8tAw.png",
+                                    comment.date))
+                        }
                     }
                 }
+                timestamp = current
+            } catch (e: RedditResponseParserException) {
+                eventQueue.addEvent(LogEvent(e.toString()))
             }
-            timestamp = current
 
             Thread.sleep(2000)
         }
