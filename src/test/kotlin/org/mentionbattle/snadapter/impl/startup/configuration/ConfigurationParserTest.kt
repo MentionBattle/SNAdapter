@@ -14,13 +14,13 @@ class ConfigurationParserTest {
     @Test(expected = ConfigurationParserException::class)
     fun parseFileNotExist() {
         val parser = ConfigurationParser()
-        parser.parse(resourcesFolder.resolve("file_not_exist.config").toString())
+        parser.parse(resourcesFolder.resolve("file_not_exist.config"))
     }
 
     @Test
     fun parseEmpty() {
         val parser = ConfigurationParser()
-        val config = parser.parse(resourcesFolder.resolve("empty.config").toString())
+        val config = parser.parse(resourcesFolder.resolve("empty.config"))
 
         assertTrue(config.port == 1020)
         assertTrue(config.socialNetworks.isEmpty())
@@ -30,7 +30,7 @@ class ConfigurationParserTest {
     @Test
     fun parseNetworks() {
         val parser = ConfigurationParser()
-        val config = parser.parse(resourcesFolder.resolve("networks.config").toString())
+        val config = parser.parse(resourcesFolder.resolve("networks.config"))
 
         assertTrue(config.port == 1020)
         assertTrue(config.socialNetworks.size == 3)
@@ -41,7 +41,7 @@ class ConfigurationParserTest {
     @Test
     fun parseInitializers() {
         val parser = ConfigurationParser()
-        val config = parser.parse(resourcesFolder.resolve("initializers.config").toString())
+        val config = parser.parse(resourcesFolder.resolve("initializers.config"))
 
         assertTrue(config.port == 1020)
         assertTrue(config.socialNetworks.isEmpty())

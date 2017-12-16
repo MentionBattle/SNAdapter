@@ -1,9 +1,12 @@
 package org.mentionbattle.snadapter.impl.common
 
+import java.io.BufferedReader
 import java.io.FileInputStream
+import java.io.InputStreamReader
 import java.nio.file.FileSystem
 import java.nio.file.FileSystems
 import java.util.*
+import java.util.stream.Collectors
 
 class Contender (val id : Int, val name : String,  path : String) {
     val path : String
@@ -18,7 +21,7 @@ class Contender (val id : Int, val name : String,  path : String) {
 
     fun packImageToBase64() : String {
         val result = mutableListOf<Byte>()
-        FileInputStream(path).use {
+            FileInputStream(path).use {
             var t : ByteArray;
             while (true) {
                 t = it.readBytes()

@@ -71,4 +71,9 @@ object ComponentSystem {
     fun getComponent(c : Class<out Any>): Any? {
         return components[c];
     }
+
+    fun destroy() {
+        isInitialized = false
+        components = mutableMapOf()
+    }
 }
