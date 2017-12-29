@@ -28,9 +28,21 @@ class Database(map : HashMap<String, Any>) {
             stmt.executeUpdate(sql)
             stmt.close()
         }
+
+        getConnection().use { c ->
+            val sql = "CREATE TABLE IF NOT EXISTS INFO" +
+                    "(id             INTEGER PRIMARY KEY," +
+                    " ContenderA     INTEGER    NOT NULL, " +
+                    " ContenderB     INTEGER    NOT NULL)";
+            val stmt = c.createStatement()
+
+            stmt.executeUpdate(sql)
+            stmt.close()
+        }
     }
 
-    fun addMention(mentionEvent: MentionEvent) {
+    fun addMention(mentionEvent: MentionEvent, scoreA : Int, scoreB : Int) {
+        updateInfoIncrementContender(scoreA, scoreB)
         removeUnnessary(mentionEvent.contender)
         synchronized(lockObject) {
 
@@ -48,6 +60,34 @@ class Database(map : HashMap<String, Any>) {
             } catch (e: Exception) {
                 throw RuntimeException(e)
             }
+        }
+    }
+
+    private fun updateInfoIncrementContender(scoreA: Int, scoreB : Int) {
+        clearInfoDatabase()
+        try {
+            getConnection().use { c ->
+                val sql = "INSERT INTO INFO (id, ContenderA, ContenderB) VALUES " +
+                        "(0, $scoreA, $scoreB)"
+                c.createStatement().use {
+                    it.executeUpdate(sql)
+                }
+            }
+        } catch (e: Exception) {
+            throw RuntimeException(e)
+        }
+    }
+
+    private fun clearInfoDatabase() {
+        try {
+            getConnection().use { c ->
+                val sql = "DELETE FROM INFO";
+                c.createStatement().use {
+                    it.executeUpdate(sql)
+                }
+            }
+        } catch (e: Exception) {
+            throw RuntimeException(e)
         }
     }
 
@@ -73,12 +113,15 @@ class Database(map : HashMap<String, Any>) {
     fun contenderMentionCount(contender: Contender) : Int {
         synchronized(lockObject) {
             try {
+                val field = if (contender.id == 1) "ContenderA" else "ContenderB"
                 getConnection().use { c ->
                     c.createStatement().use { stmt ->
-                        stmt.executeQuery("SELECT COUNT() as TOTAL FROM MENTIONS " +
-                                "WHERE MENTIONS.Contender = ${contender.id}").use {
-                            val result = it.getInt("TOTAL")
-                            return result
+                        stmt.executeQuery("SELECT $field from Info where id = 0").use {
+                            if (it.next()) {
+                                val result = it.getInt(field)
+                                return result
+                            }
+                            return 0
                         }
                     }
                 }

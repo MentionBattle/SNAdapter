@@ -37,13 +37,15 @@ internal class DatabaseTest {
         createEmptyDatabase()
         val answers = hashMapOf<Int, Int>()
         val rnd = Random(19)
-        for (i in 0..10) {
+        for (i in 1..2) {
             answers[i] = rnd.nextInt(20)
+        }
+        for (i in 1..2) {
             for (j in 0..answers[i] as Int - 1) {
-                database.addMention(createMentionEvent(i))
+                database.addMention(createMentionEvent(i), answers[1]!!, answers[2]!!)
             }
         }
-        for (i in 0..10) {
+        for (i in 1..2) {
             val ans = database.contenderMentionCount(Contender(i, "", ""))
             Assert.assertSame(answers[i], ans)
         }

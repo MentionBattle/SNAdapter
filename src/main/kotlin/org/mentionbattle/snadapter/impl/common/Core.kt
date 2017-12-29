@@ -43,7 +43,7 @@ class Core(private val eventQueue: PrimitiveEventQueue, private val database: Da
             }
             is MentionEvent -> {
                 rates[event.contender] = (rates[event.contender]!! + 1) as Int
-                database.addMention(event)
+                database.addMention(event, rates[1]!!, rates[2]!!)
                 notifyAllClients(event)
             }
         }
