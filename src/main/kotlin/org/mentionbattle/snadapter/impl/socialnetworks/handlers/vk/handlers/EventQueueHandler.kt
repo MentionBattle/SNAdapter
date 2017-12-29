@@ -27,7 +27,8 @@ class EventQueueHandler(val eventQueue: PrimitiveEventQueue) : VkMsgHandler {
     private fun buildMentionEvent(contenderId: Int, message: StreamingCallbackMessage,
                                   msgBeautifier: MsgBeautifier): Event {
         val vkAccount = msgBeautifier.findNameAndAvatarUrl(message.event.author.id)
-        val cleanedText = msgBeautifier.cleanUpNamesInText(message.event.text)
+        var cleanedText = msgBeautifier.cleanUpNamesInText(message.event.text)
+        cleanedText = msgBeautifier.shieldExclamationPoint(cleanedText)
         return MentionEvent(
                 contenderId,
                 "vk",
@@ -35,6 +36,6 @@ class EventQueueHandler(val eventQueue: PrimitiveEventQueue) : VkMsgHandler {
                 vkAccount.name,
                 cleanedText,
                 vkAccount.avatarUrl,
-                Date(message.event.creationTime.toLong()))
+                Date(message.event.creationTime * 1000L))
     }
 }
